@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Corrugated Box Internal → External Size Calculator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Packaging engineering tool</p>
+        <h1>Corrugated Box Internal → External Size Calculator</h1>
+        <p class="hero__text">
+          Пересчет внутренних размеров гофроящика в ориентировочный наружный размер,
+          safe size for Cape Pack и производственный максимум.
+        </p>
+      </div>
+      <div class="hero__badge">
+        <span>Auto calculation</span>
+        <strong id="activeModeLabel">Точный расчет</strong>
+      </div>
+    </header>
+
+    <section class="notice">
+      <strong>Важно:</strong>
+      Расчет является инженерной оценкой. Финальные наружные размеры нужно подтверждать
+      замером готового закрытого ящика из производственной партии. Для Cape Pack рекомендуется
+      использовать максимальный фактический размер + логистический запас 2–3 мм.
+    </section>
+
+    <div class="layout">
+      <form class="panel controls" id="calculatorForm">
+        <section class="form-section">
+          <h2>Внутренние размеры</h2>
+          <div class="grid grid--3">
+            <label>
+              Внутренняя длина, мм
+              <input type="number" id="innerLength" min="0" step="0.1">
+            </label>
+            <label>
+              Внутренняя ширина, мм
+              <input type="number" id="innerWidth" min="0" step="0.1">
+            </label>
+            <label>
+              Внутренняя высота, мм
+              <input type="number" id="innerHeight" min="0" step="0.1">
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2>Материал</h2>
+          <div class="grid grid--2">
+            <label>
+              Профиль гофрокартона
+              <select id="fluteProfile"></select>
+            </label>
+            <label>
+              Толщина картона, мм
+              <input type="number" id="thickness" min="0" step="0.1">
+            </label>
+            <label>
+              Марка картона
+              <select id="boardGrade"></select>
+            </label>
+            <label>
+              Производственный допуск, мм
+              <input type="number" id="tolerance" min="0" step="0.1">
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2>Конструкция</h2>
+          <div class="grid grid--2">
+            <label>
+              FEFCO type
+              <select id="boxType"></select>
+            </label>
+            <label>
+              Режим расчета
+              <select id="calculationMode">
+                <option value="exact">Точный расчет</option>
+                <option value="cape">Безопасный расчет для Cape Pack</option>
+                <option value="max">Производственный максимум</option>
+              </select>
+            </label>
+          </div>
+          <div class="grid grid--3">
+            <label>
+              Walls by length
+              <input type="number" id="lengthWalls" min="0" step="0.1">
+            </label>
+            <label>
+              Walls by width
+              <input type="number" id="widthWalls" min="0" step="0.1">
+            </label>
+            <label>
+              Walls by height
+              <input type="number" id="heightWalls" min="0" step="0.1">
+            </label>
+          </div>
+          <p class="hint">
+            Количество стенок по длине/ширине/высоте зависит от конструкции и реальной технологии
+            изготовления, поэтому значения должны проверяться по чертежу/развертке поставщика.
+          </p>
+        </section>
+
+        <section class="form-section">
+          <h2>Логистический запас</h2>
+          <div class="grid grid--2">
+            <label>
+              Дополнительный запас, мм
+              <input type="number" id="logisticsAllowance" min="0" step="0.1">
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2>Проверка на паллете</h2>
+          <div class="grid grid--2">
+            <label>
+              Длина паллеты, мм
+              <input type="number" id="palletLength" min="0" step="1">
+            </label>
+            <label>
+              Ширина паллеты, мм
+              <input type="number" id="palletWidth" min="0" step="1">
+            </label>
+            <label>
+              Максимальная высота с грузом, мм
+              <input type="number" id="maxPalletHeight" min="0" step="1">
+            </label>
+            <label>
+              Высота самой паллеты, мм
+              <input type="number" id="palletHeight" min="0" step="1">
+            </label>
+            <label class="wide">
+              Использовать размер
+              <select id="palletSizeType">
+                <option value="outer">Наружный расчетный</option>
+                <option value="cape">Cape Pack safe</option>
+                <option value="max">Производственный максимум</option>
+                <option value="safe">Максимально безопасный</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <div class="actions">
+          <button type="button" class="button button--secondary" id="resetButton">Сбросить</button>
+          <button type="button" class="button" id="copyButton">Скопировать результат</button>
+          <button type="button" class="button button--accent" id="exportButton">Экспорт JSON</button>
+        </div>
+      </form>
+
+      <aside class="results">
+        <section class="panel result-card">
+          <h2>Результат расчета</h2>
+          <div class="result-grid">
+            <article>
+              <span>Внутренний размер</span>
+              <strong id="innerResult">—</strong>
+            </article>
+            <article>
+              <span>Расчетный наружный размер</span>
+              <strong id="outerResult">—</strong>
+            </article>
+            <article>
+              <span>Safe size for Cape Pack</span>
+              <strong id="capeResult">—</strong>
+            </article>
+            <article>
+              <span>Производственный максимум</span>
+              <strong id="maxResult">—</strong>
+            </article>
+            <article class="highlight">
+              <span>Максимально безопасный размер</span>
+              <strong id="safeResult">—</strong>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel pallet-card">
+          <div class="section-heading">
+            <h2>Паллетизация</h2>
+            <span id="palletSizeLabel">Паллета 1200×800</span>
+          </div>
+          <div class="metric-row">
+            <div>
+              <span>Ящиков в слое</span>
+              <strong id="casesPerLayer">—</strong>
+            </div>
+            <div>
+              <span>Количество слоев</span>
+              <strong id="layers">—</strong>
+            </div>
+            <div>
+              <span>Всего на паллете</span>
+              <strong id="totalCases">—</strong>
+            </div>
+          </div>
+          <dl class="details">
+            <div>
+              <dt>Лучшая ориентация</dt>
+              <dd id="bestOrientation">—</dd>
+            </div>
+            <div>
+              <dt>Остаток свободного места</dt>
+              <dd id="freeSpace">—</dd>
+            </div>
+            <div>
+              <dt>Case size</dt>
+              <dd id="caseSizeUsed">—</dd>
+            </div>
+          </dl>
+          <div class="warnings" id="warnings"></div>
+        </section>
+
+        <section class="panel visual-card">
+          <div class="section-heading">
+            <h2>Схема слоя</h2>
+            <span id="visualCaption">pallet 1200×800</span>
+          </div>
+          <div class="pallet-visual" id="palletVisual" aria-label="Схематичное размещение ящиков на паллете"></div>
+          <div class="visual-legend">
+            <span><i class="legend-box legend-box--pallet"></i> pallet</span>
+            <span><i class="legend-box legend-box--case"></i> case size</span>
+            <span id="visualCases">cases per layer: —</span>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
